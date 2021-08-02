@@ -10,7 +10,7 @@
 #ifndef LAMBERT_H
 #define LAMBERT_H
 
-void vett(const double*, const double*, double*);
+void getCrossProductVectors(const double*, const double*, double*);
 void vers(const double*, double*);
 void LambertI (const double *, const double *, double , const double , const int , int , const int ,//INPUT
 	           double *, double *, double &, double &, double &, int &);//OUTPUT

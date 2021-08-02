@@ -22,56 +22,65 @@ char Name[NN][19];
 double KepTrajectory[NN][6]; // Момент времени всегда 0, и связан с датой пролёта
 double V0Vk[NN][6];
 
-static double sign  (double a, double b)
+static double sign(double a, double b)
 {
-  return (b < 0.0)? -fabs(a) : fabs(a);
+	return (b < 0.0) ? -fabs(a) : fabs(a);
+}
 
-} /* sign */
+int getDirectionMovement(const double* crossProductRadii)
+{
+	return crossProductRadii[2] >= 0.0 ? 0 : 1;
+}
 
-void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pard){
+void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pard)
+{
 //  xVec = dt
 //  pard[] = jd, v1[0:3] - момент отлёта и скорость в момент отлёта
 //  pari[2] = n0, nk
 
-	static double r[3], r0[6], rk[6], v11[3], v12[3], v2[3], dv11[3], dv12[3], dv1[3], a, p, theta, mu = 1., eps;
-	static int lw, iter, iterr, nrev, i, nctr = 11, inside;
+	static double crossProductRadii[3], radiusVectorStart[6], radiusVectorFinish[6], v11[3], v12[3], v2[3], dv11[3], dv12[3], dv1[3], a, p, theta, mu = 1., epsilon;
+	static int directionMovement, iterations, countRevolutions, i, nctr = 11, inside;
 
-	if (*xVec < 0) {
+	if (*xVec < 0) 
+	{
 		*cost = 1000;
 		*gradVec = 100;
+		
 		return;
 	}
 
-	eps = *xVec*1.e-4;
-	iter = 0;
-	nrev = 0;													// число витков
+	epsilon = *xVec*1.e-4;
+	iterations = 0;
+	countRevolutions = 0;
 
-	Ephemeris::Ephemerisx6(fp_Bin, pard[0]            , pari[0], nctr, r0, &inside, &Kep[pari[0] - 100][0], JD0[pari[0] - 100], 0);
-	Ephemeris::Ephemerisx6(fp_Bin, pard[0]+*xVec*UnitT, pari[1], nctr, rk, &inside, &Kep[pari[1] - 100][0], JD0[pari[1] - 100], 0);
+	Ephemeris::Ephemerisx6(fp_Bin, pard[0]            , pari[0], nctr, radiusVectorStart, &inside, &Kep[pari[0] - 100][0], JD0[pari[0] - 100], 0);
+	Ephemeris::Ephemerisx6(fp_Bin, pard[0]+*xVec*UnitT, pari[1], nctr, radiusVectorFinish, &inside, &Kep[pari[1] - 100][0], JD0[pari[1] - 100], 0);
 
-	vett(r0, rk, r);
-	if (r[2] >= 0.0) lw = 0;
-	else lw = 1;
+	getCrossProductVectors(radiusVectorStart, radiusVectorFinish, crossProductRadii);
+	
+	directionMovement = getDirectionMovement(crossProductRadii);
+	
 //	находит решение с заданным числом витков
-	LambertI(r0, rk, *xVec, mu, lw, nrev, 0,		// INPUT
-				 v11, v2, a, p, theta, iter);		// OUTPUT
+	LambertI(radiusVectorStart, radiusVectorFinish, *xVec, mu, directionMovement, countRevolutions, 0,		// INPUT
+				 v11, v2, a, p, theta, iterations);		// OUTPUT
 	
 	for (i = 0; i < 3; i++)
 		dv11[i] = v11[i] - pard[1+i];
 
-	Ephemeris::Ephemerisx6(fp_Bin, pard[0] + (*xVec + eps)*UnitT, pari[1], nctr, rk, &inside, &Kep[pari[1] - 100][0], JD0[pari[1] - 100], 0);
+	Ephemeris::Ephemerisx6(fp_Bin, pard[0] + (*xVec + epsilon)*UnitT, pari[1], nctr, radiusVectorFinish, &inside, &Kep[pari[1] - 100][0], JD0[pari[1] - 100], 0);
 
-	vett(r0, rk, r);
-	if (r[2] >= 0.0) lw = 0;
-	else lw = 1;
-	LambertI(r0, rk, *xVec+eps, mu, lw, nrev, 0,	// INPUT
-					v12, v2, a, p, theta, iter);	// OUTPUT
+	getCrossProductVectors(radiusVectorStart, radiusVectorFinish, crossProductRadii);
+
+	directionMovement = getDirectionMovement(crossProductRadii);
+	
+	LambertI(radiusVectorStart, radiusVectorFinish, *xVec+ epsilon, mu, directionMovement, countRevolutions, 0,	// INPUT
+					v12, v2, a, p, theta, iterations);	// OUTPUT
 
 	for (i = 0; i < 3; i++)
 		dv12[i] = v12[i] - pard[1 + i];
 
 	for (i = 0; i < 3; i++)
-		dv1[i] = (dv11[i] - dv12[i]) / eps;
+		dv1[i] = (dv11[i] - dv12[i]) / epsilon;
 
 
 	*cost = dv11[0]* dv11[0] + dv11[1] * dv11[1] + dv11[2] * dv11[2]; // первый импульс
@@ -171,9 +180,10 @@ void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], dou
 	nrev = 0;	// число витков
 
 	Ephemeris::Ephemerisx6(fp_Bin, jd, start, nctr, r0, &inside, &Kep[start-100][0], JD0[start - 100], 0);
+	
 	Ephemeris::Ephemerisx6(fp_Bin, jd + dt * UnitT, finish, nctr, rk, &inside, &Kep[finish - 100][0], JD0[finish - 100], 0);
 
-	vett(r0, rk, r);
+	getCrossProductVectors(r0, rk, r);
 	if (r[2] >= 0.0) lw = 0;
 	else lw = 1;
 //	находит решение с заданным числом витков
@@ -261,7 +271,6 @@ double TSP(	int& start, double& jd0, double dVlim, int n,															// INPUT
 				jd0 = jd[i];
 				get_rowAM(i + 100, jd0, v0, DV, DV0, DVk, DT, parents, n);
 				for (k = 1; k < n; k++) {
-					printf("Task № %i %i \n", j, n);
 					if (j >> (k - 1) % 2 != 0) { // City k is in the city set represented by j binary form
 						temp = DV[k] + dp[k][removeCity(j, k, n)]; // means removing the k city from the j city set
 						if (temp < min) {
@@ -314,6 +323,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 	fprintf(fileout, "\n");
 
 	for (i = 0; i < ip; i++) {
+		printf("%i", i);
 		Ephemeris::Ephemerisx6(fp_Bin, JDpath[i], PATH[i] + 100, nctr, r0, &inside, &Kep[PATH[i]][0], JD0[PATH[i]], 0);
 		Ephemeris::Calendar(JDpath[i], &year, &month, &day, &hour, &min, &sec, 0, 0);
 

@@ -212,7 +212,7 @@ else
 	// parameter of the solution
 	p = ( r2_mod / (am * eta2) ) * pow (sin (theta/2),2);
 	sigma1 = (1/(eta * sqrt(am)) )* (2 * lambda * am - (lambda + x * eta));
-	vett(r1,r2,ih_dum);
+	getCrossProductVectors(r1,r2,ih_dum);
 	vers(ih_dum,ih) ;
 
 	if (lw)
@@ -223,7 +223,7 @@ else
 
 	vr1 = sigma1;
 	vt1 = sqrt(p);
-	vett(ih,r1,dum);
+	getCrossProductVectors(ih,r1,dum);
    
 	for (i = 0;i < 3 ;i++)
 		v1[i] = vr1 * r1[i] + vt1 * dum[i];
@@ -232,7 +232,7 @@ else
 	vr2 = -vr1 + (vt1 - vt2)/tan(theta/2);
 	
 	vers(r2,r2_vers);
-	vett(ih,r2_vers,dum);
+	getCrossProductVectors(ih,r2_vers,dum);
 	for (i = 0;i < 3 ;i++)
 		v2[i] = vr2 * r2[i] / r2_mod + vt2 * dum[i];
  
@@ -331,13 +331,13 @@ double am, a, alfa, beta;
 
 }
 
-//subfunction that evaluates vector product     vector_product
-void vett(const double *vet1, const double *vet2, double *prod )  
+void getCrossProductVectors(const double * vectorFirst, const double * vectorSecond, double *crossProductVector)
 {
-	prod[0]=(vet1[1]*vet2[2]-vet1[2]*vet2[1]);
-	prod[1]=(vet1[2]*vet2[0]-vet1[0]*vet2[2]);
-	prod[2]=(vet1[0]*vet2[1]-vet1[1]*vet2[0]);
+	crossProductVector[0] = (vectorFirst[1] * vectorSecond[2] - vectorFirst[2] * vectorSecond[1]);
+	crossProductVector[1] = (vectorFirst[2] * vectorSecond[0] - vectorFirst[0] * vectorSecond[2]);
+	crossProductVector[2] = (vectorFirst[0] * vectorSecond[1] - vectorFirst[1] * vectorSecond[0]);
 }
+
 void vers(const double *V_in, double *Ver_out)
 {
 	double v_mod = 0;
