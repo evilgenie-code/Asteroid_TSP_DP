@@ -8,11 +8,12 @@
 #include "Lambert.h"
 #include "fmincg.h"
 
-#define NN 10
+#define NN 10 //countObjects
 #define MAX 0x7fffffff
 #define _CRT_SECURE_NO_WARNINGS
 
 using namespace std;
+using std::string;
 
 FILE *fp_Bin;
 double UnitM, UnitP, Unitb, UnitN;
@@ -155,7 +156,8 @@ void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], dou
 	}
 }
 
-void get_rowAM(int start, double jd0, double v0[][3], double DV[NN], double DV0[][3], double DVk[][3], double DT[NN], int parents[NN], int n, bool OK = 1){
+void get_rowAM(int start, double jd0, double v0[][3], double DV[NN], double DV0[][3], double DVk[][3], double DT[NN], int parents[NN], int n, bool OK = 1)
+{
 
 	static int i, j;
 	static double dv1[3], dv2[3];
@@ -186,9 +188,9 @@ void get_rowAM(int start, double jd0, double v0[][3], double DV[NN], double DV0[
 
 int removeCity(int j, int k, int n)// Remove the k city from the set of cities represented by j binary (k bit is set to 0)
 { 
-	int all_cities = (1 << (n - 1)) - 1;
-	int only_k_city = 1 << (k - 1);
-	int mask = all_cities ^ only_k_city; // XOR (all 1 except for the k position)
+	int allCities = (1 << (n - 1)) - 1;
+	int onlyKCity = 1 << (k - 1);
+	int mask = allCities ^ onlyKCity; // XOR (all 1 except for the k position)
 
 	return j & mask;
 }
@@ -210,7 +212,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 
 	for (i = 0; i < ip; i++) {
 		printf("%i", i);
-		Ephemeris::Ephemerisx6(fp_Bin, JDpath[i], PATH[i] + 100, nctr, r0, &inside, &Kep[PATH[i]][0], JD0[PATH[i]], 0);
+		//Ephemeris::Ephemerisx6(fp_Bin, JDpath[i], PATH[i] + 100, nctr, r0, &inside, &Kep[PATH[i]][0], JD0[PATH[i]], 0);
 		Ephemeris::Calendar(JDpath[i], &year, &month, &day, &hour, &min, &sec, 0, 0);
 
 		for (j = 0; j < 20; j++)
@@ -297,14 +299,14 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 	}
 	fclose(fileout);
 }
-
+							
 double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 	double& dVsum, int* PATH, double* dVpath, double* JDpath, int& ip, int path[][1 << (NN - 1)])
 {			// OUTPUT
 
 	double v0[NN][3], DV[NN], DV0[NN][3], DVk[NN][3], DT[NN], jd[NN], dVmin, dt = 0;
 	double temp;
-	int parents[NN], i, j, k, min, next_city;
+	int parents[NN], i, j, k, min, nextCity;
 
 	double** dp = new double*[n + 1];
 	
@@ -336,7 +338,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 			{
 				// City i is not in the set of cities in j binary form
 				min = MAX;
-				next_city = i;
+				nextCity = i;
 				jd0 = jd[i];
 				get_rowAM(i + 100, jd0, v0, DV, DV0, DVk, DT, parents, n);
 				for (k = 1; k < n; k++) 
@@ -349,42 +351,42 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 						if (temp < min) 
 						{
 							min = temp;
-							next_city = k;
+							nextCity = k;
 							dt = DT[k];
 						}
 					}
 				}
 				dp[i][j] = min;
-				path[i][j] = next_city;
+				path[i][j] = nextCity;
 
-				jd[next_city] = jd0 + dt;
+				jd[nextCity] = jd0 + dt;
 			}
 		}
 	}
 
 	// Fill in the upper left corner element
 	min = MAX;
-	next_city = 0;
+	nextCity = 0;
 	j = (1 << (n - 1)) - 1; // Represents the collection of all cities except city 0
 	get_rowAM(i + 100, jd0, v0, DV, DV0, DVk, DT, parents, n);
 	for (k = 1; k < n; k++) {
 		temp = DV[k] + dp[k][removeCity(j, k, n)];
 		if (temp < min) {
 			min = temp;
-			next_city = k;
+			nextCity = k;
 		}
 	}
 	dp[0][j] = min;
-	path[0][j] = next_city;
+	path[0][j] = nextCity;
 
 	return dp[0][j];
 }
 
-int main() {
-
+int main()
+{
 	int type;
 	printf("Start! \n");
-	printf("1. Data from file. 2. Data from MPCORB. \n");
+	printf("1. Data from MPCORB. 2. Data from file. \n");
 	printf("Enter your type:");
 	cin >> type;
 	printf("Type = %i \n", type);
@@ -392,18 +394,25 @@ int main() {
 	const int de = 405;
 	fp_Bin = Ephemeris::INITIAL_DE(de);
 	
-	int n = NN, nn[] = { 0, 10000 };
+	int n = NN, nn[] = { 0, 10000 };// искать в первых 10000 объектах
 	double aa[] = { 0.7, 3.5 }, e[] = { -0.1, 0.4 }, I[] = { -15 / raddeg, 15 / raddeg };
+	//filters посмотреть в статье ји 
 
 	if (type == 1)
-	{
+	{										//name - nameObjects
 		Ephemeris::Kep_elements_MPCORB_data(Name, Kep, JD0, aa, e, I, nn, n);
 	}
 	else if (type == 2)
 	{
 		n = 0;
+		string nameFile;
 		
-		ifstream filein("amors.txt");
+		printf("Enter your name file, without extension:");
+		cin >> nameFile;
+
+		nameFile = nameFile + ".txt";
+		
+		ifstream filein(nameFile);
 		while (filein.getline(Name[n], 19)) n++;
 		filein.close();
 		
@@ -425,7 +434,7 @@ int main() {
 	int path[NN][1 << (NN - 1)] = { 0 };
 	
 	if (n > NN) n = NN;
-	TSP(start, jd0, dVlim, n,					// INPUT
+	TSP(start, jd0, dVlim, n,							// INPUT
 		dVsum, PATH, dVpath, JDpath, ip, path);		// OUTPUT
 
 	print_PATH(PATH, dVpath, JDpath, ip + 1, jd0);
