@@ -95,6 +95,7 @@ void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pa
 
 void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], double* vs, double* vk, double &dV, double dv1[3], double dv2[3]) {
 
+	printf("Start Lambert \n");
 	static double a1, a2, dt1, f1, df1, dt2, f2, df2, pard[4];
 	static int pari[2];
 
@@ -102,14 +103,22 @@ void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], dou
 	static int lw, iter, nrev, i, nctr = 11, inside;
 
 	if (start == 13)
+	{
 		a1 = 1.0;
+	}
 	else
+	{
 		a1 = Kep[start - 100][0];
+	}
 
 	if (finish == 13)
+	{
 		a2 = 1.0;
+	}
 	else
+	{
 		a2 = Kep[finish - 100][0];
+	}
 
 	a1 = PI2 * sqrt(a1*a1*a1);
 	a2 = PI2 * sqrt(a2*a2*a2);
@@ -121,15 +130,20 @@ void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], dou
 	pari[1] = finish;
 
 	pard[0] = jd;
-	pard[1] = v0[0]; pard[2] = v0[1]; pard[3] = v0[2];
+	pard[1] = v0[0];
+	pard[2] = v0[1];
+	pard[3] = v0[2];
+	
 	int ret1 = fmincg(&costFunc, &dt1, pari, pard, 1, 100, f1, &df1); // nDim = 1 , maxCostFunctionCalls = 100
 	int ret2 = fmincg(&costFunc, &dt2, pari, pard, 1, 100, f2, &df2); // nDim = 1 , maxCostFunctionCalls = 100
 
-	if (f1 < f2) {
+	if (f1 < f2) 
+	{
 		dt = dt1;
 		dV = sqrt(f1);
 	}
-	else {
+	else 
+	{
 		dt = dt2;
 		dV = sqrt(f2);
 	}
@@ -142,18 +156,32 @@ void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], dou
 	Ephemeris::Ephemerisx6(fp_Bin, jd + dt * UnitT, finish, nctr, rk, &inside, &Kep[finish - 100][0], JD0[finish - 100], 0);
 
 	getCrossProductVectors(r0, rk, r);
-	if (r[2] >= 0.0) lw = 0;
-	else lw = 1;
+	
+	if (r[2] >= 0.0)
+	{
+		lw = 0;
+	}
+	else
+	{
+		lw = 1;
+	}
+	
 //	находит решение с заданным числом витков
 	LambertI(r0, rk, dt, mu, lw, nrev, 0,			// INPUT
 			 v1, v2, a, p, theta, iter);			// OUTPUT
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 3; i++) 
+	{
 		dv1[i] = v1[i] - v0[i];
 		dv2[i] = rk[3 + i] - v1[i];
 		vs[i] = v1[i];
 		vk[i] = v2[i];
+
+		printf("vs = %d \n", vs[i]);
+		printf("vk = %d \n", vk[i]);
 	}
+
+	printf("Finish Lambert \n");
 }
 
 void get_rowAM(int start, double jd0, double v0[][3], double DV[NN], double DV0[][3], double DVk[][3], double DT[NN], int parents[NN], int n, bool OK = 1)
@@ -217,7 +245,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 
 		for (j = 0; j < 20; j++)
 			nameFile[j] = '\0';
-
+		/*
 		if (PATH[i] + 100 == 13) {
 			a = 1.0;
 			nameFile[0] = 'E';
@@ -232,7 +260,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 			for (j = 0; Name[i][j] != 32 && Name[i][j]; j++)
 				nameFile[j] = Name[i][j];
 		}
-
+		*/
 		fprintf(fileout, "%25.16e %25.16e %25.16e %25.16e %25.16e %25.16e ", r0[0], r0[1], r0[2], r0[3], r0[4], r0[5]);
 		fprintf(fileout, "%25s %25.16e ", nameFile, JDpath[i]);
 		fprintf(fileout, "%04i.%02i.%02i %02i:%02i:%02i ", int(year), int(month), int(day), int(hour), int(min), int(sec));
@@ -246,6 +274,8 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 		for (j = 0; j<20; j++)
 			nameFile[j] = '\0';
 
+		a = 1.0;
+		/*
 		if (PATH[i] + 100 == 13) {
 			a = 1.0;
 			nameFile[0] = 'E';
@@ -260,6 +290,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 			for (j = 0; Name[i][j] != 32 && Name[i][j]; j++)
 				nameFile[j] = Name[i][j];
 		}
+		*/
 
 		a = PI2 * sqrt(a * a * a)*UnitT;
 		a = a / n;
@@ -311,17 +342,25 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 	double** dp = new double*[n + 1];
 	
 	for (i = 0; i < n + 1; i++)
+	{
 		dp[i] = new double[1 << (n - 1)]{ 0 };
+	}
 
 	ip = 0;
 	for (i = 0; i < n; i++)
+	{
 		parents[i] = -1;
+	}
 
 	int nctr = 11, inside;
 	double r0[6];
+	
 	Ephemeris::Ephemerisx6(fp_Bin, jd0, start + 100, nctr, r0, &inside, &Kep[start - 100][0], JD0[start - 100], 0);
+	
 	for (i = 0; i < 3; i++)
+	{
 		v0[0][i] = r0[3 + i];
+	}
 
 	get_rowAM(start + 100, jd0, v0, DV, DV0, DVk, DT, parents, n);
 
@@ -341,6 +380,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 				nextCity = i;
 				jd0 = jd[i];
 				get_rowAM(i + 100, jd0, v0, DV, DV0, DVk, DT, parents, n);
+				/*
 				for (k = 1; k < n; k++) 
 				{
 					// City k is in the city set represented by j binary form
@@ -356,6 +396,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 						}
 					}
 				}
+				*/
 				dp[i][j] = min;
 				path[i][j] = nextCity;
 
@@ -364,6 +405,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 		}
 	}
 
+	/*
 	// Fill in the upper left corner element
 	min = MAX;
 	nextCity = 0;
@@ -376,6 +418,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 			nextCity = k;
 		}
 	}
+	*/
 	dp[0][j] = min;
 	path[0][j] = nextCity;
 
@@ -424,6 +467,8 @@ int main()
 		return 0;
 	}
 
+	printf("Start calculation \n");
+	
 	int ip, PATH[50];
 	double jd0 = Ephemeris::JD_epf(2023, 8, 29, 0);
 
@@ -432,12 +477,18 @@ int main()
 	double dVsum = 0.0, dVpath[50] = { 0 }, JDpath[50] = { 0 };
 
 	int path[NN][1 << (NN - 1)] = { 0 };
+
+	if (n > NN)
+	{
+		n = NN;
+	}
+
+	printf("Start TSP");
 	
-	if (n > NN) n = NN;
 	TSP(start, jd0, dVlim, n,							// INPUT
 		dVsum, PATH, dVpath, JDpath, ip, path);		// OUTPUT
 
-	print_PATH(PATH, dVpath, JDpath, ip + 1, jd0);
+	//print_PATH(PATH, dVpath, JDpath, ip + 1, jd0);
 	
 	system("pause");
 	return 0;
