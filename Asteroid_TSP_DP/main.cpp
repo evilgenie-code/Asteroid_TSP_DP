@@ -43,9 +43,9 @@ void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pa
 //  xVec = dt
 //  pard[] = jd, v1[0:3] - момент отлЄта и скорость в момент отлЄта
 //  pari[2] = n0, nk
-	static double crossProductRadii[3], radiusVectorStart[6], radiusVectorFinish[6], v11[3], v12[3], v2[3], dv11[3], dv12[3], dv1[3], a, p, theta, mu = 1., epsilon;
+	static double crossProductRadii[3], radiusVectorStart[6] = { 0 }, radiusVectorFinish[6] = { 0 }, v11[3], v12[3], v2[3], dv11[3], dv12[3], dv1[3], a, p, theta, mu = 1., epsilon;
 	static int directionMovement, iterations, countRevolutions, i, nctr = 11, inside;
-
+	
 	if (*xVec < 0) 
 	{
 		*cost = 1000;
@@ -58,17 +58,19 @@ void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pa
 	iterations = 0;
 	countRevolutions = 0;
 
-	Ephemeris::Ephemerisx6(fp_Bin, pard[0]            , pari[0], nctr, radiusVectorStart, &inside, &Kep[pari[0] - 100][0], JD0[pari[0] - 100], 0);
-	Ephemeris::Ephemerisx6(fp_Bin, pard[0]+*xVec*UnitT, pari[1], nctr, radiusVectorFinish, &inside, &Kep[pari[1] - 100][0], JD0[pari[1] - 100], 0);
+	Ephemeris::Ephemerisx6(fp_Bin, pard[0], pari[0], nctr, radiusVectorStart, &inside, &Kep[pari[0] - 100][0], JD0[pari[0] - 100], 0);
+
+	Ephemeris::Ephemerisx6(fp_Bin, pard[0] + *xVec * UnitT, pari[1], nctr, radiusVectorFinish, &inside, &Kep[pari[1] - 100][0], JD0[pari[1] - 100], 0);
 
 	getCrossProductVectors(radiusVectorStart, radiusVectorFinish, crossProductRadii);
 	
 	directionMovement = getDirectionMovement(crossProductRadii);
 	
 //	находит решение с заданным числом витков
+	
 	LambertI(radiusVectorStart, radiusVectorFinish, *xVec, mu, directionMovement, countRevolutions, 0,		// INPUT
 				 v11, v2, a, p, theta, iterations);		// OUTPUT
-	
+
 	for (i = 0; i < 3; i++)
 		dv11[i] = v11[i] - pard[1+i];
 
@@ -95,12 +97,13 @@ void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pa
 
 void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], double* vs, double* vk, double &dV, double dv1[3], double dv2[3]) {
 
-	printf("Start Lambert \n");
 	static double a1, a2, dt1, f1, df1, dt2, f2, df2, pard[4];
 	static int pari[2];
 
-	static double r[3], r0[6], rk[6], v1[3], v2[3], a, p, theta, mu = 1.;
+	static double r[3], r0[6] = { 0 }, rk[6], v1[3], v2[3], a, p, theta, mu = 1.;
 	static int lw, iter, nrev, i, nctr = 11, inside;
+
+	
 
 	if (start == 13)
 	{
@@ -136,6 +139,7 @@ void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], dou
 	
 	int ret1 = fmincg(&costFunc, &dt1, pari, pard, 1, 100, f1, &df1); // nDim = 1 , maxCostFunctionCalls = 100
 	int ret2 = fmincg(&costFunc, &dt2, pari, pard, 1, 100, f2, &df2); // nDim = 1 , maxCostFunctionCalls = 100
+
 
 	if (f1 < f2) 
 	{
@@ -176,12 +180,7 @@ void transfer(int &start, int &finish, double &jd, double &dt, double v0[3], dou
 		dv2[i] = rk[3 + i] - v1[i];
 		vs[i] = v1[i];
 		vk[i] = v2[i];
-
-		printf("vs = %d \n", vs[i]);
-		printf("vk = %d \n", vk[i]);
 	}
-
-	printf("Finish Lambert \n");
 }
 
 void get_rowAM(int start, double jd0, double v0[][3], double DV[NN], double DV0[][3], double DVk[][3], double DT[NN], int parents[NN], int n, bool OK = 1)
@@ -239,13 +238,13 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 	fprintf(fileout, "\n");
 
 	for (i = 0; i < ip; i++) {
-		printf("%i", i);
+		cout << PATH[i];
 		//Ephemeris::Ephemerisx6(fp_Bin, JDpath[i], PATH[i] + 100, nctr, r0, &inside, &Kep[PATH[i]][0], JD0[PATH[i]], 0);
 		Ephemeris::Calendar(JDpath[i], &year, &month, &day, &hour, &min, &sec, 0, 0);
 
 		for (j = 0; j < 20; j++)
 			nameFile[j] = '\0';
-		/*
+		
 		if (PATH[i] + 100 == 13) {
 			a = 1.0;
 			nameFile[0] = 'E';
@@ -260,7 +259,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 			for (j = 0; Name[i][j] != 32 && Name[i][j]; j++)
 				nameFile[j] = Name[i][j];
 		}
-		*/
+		
 		fprintf(fileout, "%25.16e %25.16e %25.16e %25.16e %25.16e %25.16e ", r0[0], r0[1], r0[2], r0[3], r0[4], r0[5]);
 		fprintf(fileout, "%25s %25.16e ", nameFile, JDpath[i]);
 		fprintf(fileout, "%04i.%02i.%02i %02i:%02i:%02i ", int(year), int(month), int(day), int(hour), int(min), int(sec));
@@ -275,7 +274,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 			nameFile[j] = '\0';
 
 		a = 1.0;
-		/*
+		
 		if (PATH[i] + 100 == 13) {
 			a = 1.0;
 			nameFile[0] = 'E';
@@ -290,7 +289,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 			for (j = 0; Name[i][j] != 32 && Name[i][j]; j++)
 				nameFile[j] = Name[i][j];
 		}
-		*/
+		
 
 		a = PI2 * sqrt(a * a * a)*UnitT;
 		a = a / n;
@@ -315,8 +314,7 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 	fileout = fopen("Trajectory.txt", "w");
 	fprintf(fileout, "%25s %25s %25s %25s %25s %25s %25s ", "jd, day", "x1, UnitR", "y1, UnitR", "z1, UnitR", "Vx1, UnitV", "Vy1, UnitV", "Vz1, UnitV");
 	fprintf(fileout, "\n");
-
-
+	
 	for (i = 0; i < ip-1; i++) {
 
 		a = JDpath[i+1] - JDpath[i];
@@ -328,12 +326,13 @@ void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0) {
 			fprintf(fileout, "\n");
 		}
 	}
+	
 	fclose(fileout);
 }
 							
 double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
-	double& dVsum, int* PATH, double* dVpath, double* JDpath, int& ip, int path[][1 << (NN - 1)])
-{			// OUTPUT
+	double& dVsum, int* PATH, double* dVpath, double* JDpath, int& ip, int path[][1 << (NN - 1)]) // OUTPUT
+{			
 
 	double v0[NN][3], DV[NN], DV0[NN][3], DVk[NN][3], DT[NN], jd[NN], dVmin, dt = 0;
 	double temp;
@@ -349,26 +348,29 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 	ip = 0;
 	for (i = 0; i < n; i++)
 	{
-		parents[i] = -1;
+		parents[i] = -1; //массив предшественников
 	}
 
 	int nctr = 11, inside;
 	double r0[6];
 	
 	Ephemeris::Ephemerisx6(fp_Bin, jd0, start + 100, nctr, r0, &inside, &Kep[start - 100][0], JD0[start - 100], 0);
+	//начальные услови€ дл€ перелета(скорость и положение)
 	
 	for (i = 0; i < 3; i++)
 	{
-		v0[0][i] = r0[3 + i];
+		v0[0][i] = r0[3 + i]; //скорость
 	}
 
 	get_rowAM(start + 100, jd0, v0, DV, DV0, DVk, DT, parents, n);
 
 	// Initialize the distance from all cities to city 0
-	for (i = 1; i < n; i++) 
+	for (i = 1; i < n; i++)
+	{
 		dp[i][0] = DV[i];
 		jd[i] = jd0 + DT[i];
-
+	}
+	
 	for (j = 1; j < (1 << (n - 1)); j++)
 	{
 		for (i = 1; i < n; i++)
@@ -380,7 +382,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 				nextCity = i;
 				jd0 = jd[i];
 				get_rowAM(i + 100, jd0, v0, DV, DV0, DVk, DT, parents, n);
-				/*
+				
 				for (k = 1; k < n; k++) 
 				{
 					// City k is in the city set represented by j binary form
@@ -396,7 +398,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 						}
 					}
 				}
-				*/
+				
 				dp[i][j] = min;
 				path[i][j] = nextCity;
 
@@ -404,21 +406,30 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 			}
 		}
 	}
-
-	/*
+	
 	// Fill in the upper left corner element
 	min = MAX;
 	nextCity = 0;
-	j = (1 << (n - 1)) - 1; // Represents the collection of all cities except city 0
+	// Represents the collection of all cities except city 0
+	j = (1 << (n - 1)) - 1;
+
 	get_rowAM(i + 100, jd0, v0, DV, DV0, DVk, DT, parents, n);
-	for (k = 1; k < n; k++) {
+
+	printf("Finish\n");
+
+	for (k = 1; k < n; k++) 
+	{
 		temp = DV[k] + dp[k][removeCity(j, k, n)];
-		if (temp < min) {
+
+		cout << temp << '\n';
+
+		if (temp < min) 
+		{
 			min = temp;
 			nextCity = k;
 		}
 	}
-	*/
+	
 	dp[0][j] = min;
 	path[0][j] = nextCity;
 
@@ -430,9 +441,10 @@ int main()
 	int type;
 	printf("Start! \n");
 	printf("1. Data from MPCORB. 2. Data from file. \n");
-	printf("Enter your type:");
+	printf("Enter your type:\n");
 	cin >> type;
 	printf("Type = %i \n", type);
+	type = 2;
 
 	const int de = 405;
 	fp_Bin = Ephemeris::INITIAL_DE(de);
@@ -440,7 +452,7 @@ int main()
 	int n = NN, nn[] = { 0, 10000 };// искать в первых 10000 объектах
 	double aa[] = { 0.7, 3.5 }, e[] = { -0.1, 0.4 }, I[] = { -15 / raddeg, 15 / raddeg };
 	//filters посмотреть в статье ји 
-
+	
 	if (type == 1)
 	{										//name - nameObjects
 		Ephemeris::Kep_elements_MPCORB_data(Name, Kep, JD0, aa, e, I, nn, n);
@@ -464,10 +476,8 @@ int main()
 	else
 	{
 		printf("Unknown type: %i \n", type);
-		return 0;
+		return 1;
 	}
-
-	printf("Start calculation \n");
 	
 	int ip, PATH[50];
 	double jd0 = Ephemeris::JD_epf(2023, 8, 29, 0);
@@ -483,12 +493,12 @@ int main()
 		n = NN;
 	}
 
-	printf("Start TSP");
+	printf("Start TSP \n");
 	
 	TSP(start, jd0, dVlim, n,							// INPUT
 		dVsum, PATH, dVpath, JDpath, ip, path);		// OUTPUT
 
-	//print_PATH(PATH, dVpath, JDpath, ip + 1, jd0);
+	print_PATH(PATH, dVpath, JDpath, ip + 1, jd0);
 	
 	system("pause");
 	return 0;

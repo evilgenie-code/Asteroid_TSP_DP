@@ -266,7 +266,7 @@ namespace Ephemeris{
 		Dec[5] = workd[3]*( cos(workd[6])*sin(Kep[2]));
 	}
 
-	void Ephemerisx6        (FILE *fp_Bin,double  jd,int targ,int cent,double *rrd,int *inside, double* Kep, double jd0, int dimension){
+	void Ephemerisx6        (FILE *fp_Bin,double  jd, int targ,int cent,double *rrd,int *inside, double* Kep, double jd0, int dimension){
 /*		+-------------------------------------------------------------------------+
 		| INPUTS :                                                                |
 		|       JD = D.P. JULIAN EPHEMERIS DATE AT WHICH INTERPOLATION IS WANTED. |
@@ -338,6 +338,7 @@ namespace Ephemeris{
 			Cartesian_coordinate (Kep, jd0, jd, rrd);
 
 			if (dimension){
+
 				rrd[0] = rrd[0] * UnitR;                                       //  km
 				rrd[1] = rrd[1] * UnitR;                                       //  km
 				rrd[2] = rrd[2] * UnitR;                                       //  km
@@ -348,9 +349,10 @@ namespace Ephemeris{
 
 			}
 		}
-
-		else { rrd[0] = 0; rrd[1] = 0; rrd[2] = 0; rrd[3] = 0; rrd[4] = 0; rrd[5] = 0; *inside=-1; }
-       
+		else 
+		{ 
+			rrd[0] = 0; rrd[1] = 0; rrd[2] = 0; rrd[3] = 0; rrd[4] = 0; rrd[5] = 0; *inside=-1; 
+		}
 	}
 	
 	void NAME                (char *Name, int &n, int i){

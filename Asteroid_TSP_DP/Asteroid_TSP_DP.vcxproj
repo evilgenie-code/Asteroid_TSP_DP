@@ -32,6 +32,9 @@
     <ClInclude Include="fmincg.h" />
     <ClInclude Include="Lambert.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Desktop\mpcorb.dat" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

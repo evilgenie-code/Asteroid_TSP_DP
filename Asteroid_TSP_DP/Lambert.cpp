@@ -87,8 +87,6 @@ void LambertI (const double *r1_in, const double *r2_in, double t, const double 
     lambda,	        // lambda parameter defined in Battin's Book
 	x1, x2, y1, y2,
 	x, x_new=0,y_new, vr1, vt1, vt2, vr2;
-
-	//printf("%s", "Start Lambert solver \n");
 	
 	for (i = 0; i < 3; i++)
     {
@@ -183,12 +181,7 @@ else
 	if (i==imax) { 	iter = -1; }
 	else { iter = i; }
 }
-	// The solution has been evaluated in terms of log(x+1) or tan(x*pi/2), we
-    // now need the conic. As for transfer angles near to pi the lagrange
-    // coefficient technique goes singular (dg approaches a zero/zero that is
-    // numerically bad) we here use a different technique for those cases. When
-    // the transfer angle is exactly equal to pi, then the ih unit vector is not
-    // determined. The remaining equations, though, are still valid.
+	
 	a = am/(1 - x*x);			  // solution semimajor axis
 	// psi evaluation
 	if (x < 1)  // ellipse
@@ -223,26 +216,34 @@ else
 
 	vr1 = sigma1;
 	vt1 = sqrt(p);
+
 	getCrossProductVectors(ih,r1,dum);
    
-	for (i = 0;i < 3 ;i++)
+	for (i = 0; i < 3; i++)
+	{
 		v1[i] = vr1 * r1[i] + vt1 * dum[i];
-   
+	}
+
 	vt2 = vt1 / r2_mod;
 	vr2 = -vr1 + (vt1 - vt2)/tan(theta/2);
 	
 	vers(r2,r2_vers);
 	getCrossProductVectors(ih,r2_vers,dum);
-	for (i = 0;i < 3 ;i++)
+
+	for (i = 0; i < 3; i++)
+	{
 		v2[i] = vr2 * r2[i] / r2_mod + vt2 * dum[i];
+	}
  
 	for (i = 0;i < 3;i++)
     {
 		v1[i] *= V;
 		v2[i] *= V;
     }
+
 	a *= R;
 	p *= R;
+	
 	/*
 	cout<<"a = "<<a<<endl;
 	cout<<"p = "<<p<<endl;
