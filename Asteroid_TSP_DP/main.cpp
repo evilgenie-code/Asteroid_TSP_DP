@@ -58,7 +58,7 @@ void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pa
 	epsilon = *xVec*1.e-4;
 	iterations = 0;
 	countRevolutions = 0;
-	s
+
 	Ephemeris::Ephemerisx6(fp_Bin, pard[0], pari[0], nctr, radiusVectorStart, &inside, &Kep[pari[0] - 100][0], JD0[pari[0] - 100], 0);
 
 	Ephemeris::Ephemerisx6(fp_Bin, pard[0] + *xVec * UnitT, pari[1], nctr, radiusVectorFinish, &inside, &Kep[pari[1] - 100][0], JD0[pari[1] - 100], 0);
@@ -68,7 +68,7 @@ void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pa
 	directionMovement = getDirectionMovement(crossProductRadii);
 	
 //	находит решение с заданным числом витков
-	                                                       
+	
 	LambertI(radiusVectorStart, radiusVectorFinish, *xVec, mu, directionMovement, countRevolutions, 0,		// INPUT
 				 v11, v2, a, p, theta, iterations);		// OUTPUT
 
