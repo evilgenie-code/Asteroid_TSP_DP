@@ -371,7 +371,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 		dp[i][0] = DV[i];
 		jd[i] = jd0 + DT[i];
 	}
-	
+	asd
 	for (j = 1; j < (1 << (n - 1)); j++)
 	{ 
 		for (i = 1; i < n; i++)
