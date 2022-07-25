@@ -24,7 +24,8 @@ double KepTrajectory[NN][6]; // ћомент времени всегда 0, и св€зан с датой пролЄт
 double V0Vk[NN][6];
 
 void transfer(int& start, int& finish, double& jd, double& dt, double v0[3], double* vs, double* vk, double& dV, double dv1[3], double dv2[3]);
-double TSP(int& start, double& jd0, double dVlim, int n,														// INPUT
+double TSP
+(int& start, double& jd0, double dVlim, int n,														// INPUT
 	double& dVsum, int* PATH, double* dVpath, double* JDpath, int& ip, int path[][1 << (NN - 1)]);			// OUTPUT
 void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0);
 
@@ -57,7 +58,7 @@ void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pa
 	epsilon = *xVec*1.e-4;
 	iterations = 0;
 	countRevolutions = 0;
-
+	s
 	Ephemeris::Ephemerisx6(fp_Bin, pard[0], pari[0], nctr, radiusVectorStart, &inside, &Kep[pari[0] - 100][0], JD0[pari[0] - 100], 0);
 
 	Ephemeris::Ephemerisx6(fp_Bin, pard[0] + *xVec * UnitT, pari[1], nctr, radiusVectorFinish, &inside, &Kep[pari[1] - 100][0], JD0[pari[1] - 100], 0);
@@ -67,7 +68,7 @@ void costFunc(double* xVec, double* cost, double* gradVec, int* pari, double *pa
 	directionMovement = getDirectionMovement(crossProductRadii);
 	
 //	находит решение с заданным числом витков
-	
+	                                                       
 	LambertI(radiusVectorStart, radiusVectorFinish, *xVec, mu, directionMovement, countRevolutions, 0,		// INPUT
 				 v11, v2, a, p, theta, iterations);		// OUTPUT
 
@@ -372,7 +373,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 	}
 	
 	for (j = 1; j < (1 << (n - 1)); j++)
-	{
+	{ 
 		for (i = 1; i < n; i++)
 		{
 			if ((j >> (i - 1)) % 2 == 0)
@@ -444,7 +445,6 @@ int main()
 	printf("Enter your type:\n");
 	cin >> type;
 	printf("Type = %i \n", type);
-	type = 2;
 
 	const int de = 405;
 	fp_Bin = Ephemeris::INITIAL_DE(de);
@@ -462,23 +462,35 @@ int main()
 		n = 0;
 		string nameFile;
 		
-		printf("Enter your name file, without extension:");
-		cin >> nameFile;
+		//printf("Enter your name file, without extension:");
+		//cin >> nameFile;
 
-		nameFile = nameFile + ".txt";
+		nameFile = "amors_data.txt";
 		
 		ifstream filein(nameFile);
 		while (filein.getline(Name[n], 19)) n++;
 		filein.close();
-		
+	
 		Ephemeris::Kep_elements_MPCORB_dataName(Name, Kep, JD0, n);
 	}
-	else
+	else 
 	{
 		printf("Unknown type: %i \n", type);
 		return 1;
 	}
+
+	FILE* fileout;
+	char nameFile[20] = { "amors_kep_data.txt" };
+
+	fileout = fopen(nameFile, "w");
+	fprintf(fileout, "%25s %25s %25s %25s %25s %25s %25s %25s \n", "name", "jd", "a", "e", "i", "w", "OM", "M0");
 	
+	for (int i = 0; i < NN; i++)
+	{
+		fprintf(fileout, "%25s %25.16lf %25.16lf %25.16lf %25.16lf %25.16lf %25.16lf %25.16lf \n", Name[i], JD0[i], Kep[i][0], Kep[i][1], Kep[i][2], Kep[i][3], Kep[i][4], Kep[i][5]);
+	}
+	fclose(fileout);
+	/*
 	int ip, PATH[50];
 	double jd0 = Ephemeris::JD_epf(2023, 8, 29, 0);
 
@@ -497,8 +509,9 @@ int main()
 	
 	TSP(start, jd0, dVlim, n,							// INPUT
 		dVsum, PATH, dVpath, JDpath, ip, path);		// OUTPUT
-
-	print_PATH(PATH, dVpath, JDpath, ip + 1, jd0);
+		*/
+	//print_PATH(PATH, dVpath, JDpath, ip + 1, jd0);
+	
 	
 	system("pause");
 	return 0;
