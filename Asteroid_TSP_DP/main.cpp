@@ -29,6 +29,11 @@ double TSP
 	double& dVsum, int* PATH, double* dVpath, double* JDpath, int& ip, int path[][1 << (NN - 1)]);			// OUTPUT
 void print_PATH(int* PATH, double* dVpath, double* JDpath, int ip, double jd0);
 
+void _log(string text)
+{
+	printf("%s\n", text.c_str());
+}
+
 static double sign(double a, double b)
 {
 	return (b < 0.0) ? -fabs(a) : fabs(a);
@@ -355,8 +360,7 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 	int nctr = 11, inside;
 	double r0[6];
 	
-	Ephemeris::Ephemerisx6(fp_Bin, jd0, start + 100, nctr, r0, &inside, &Kep[start - 100][0], JD0[start - 100], 0);
-	//начальные услови€ дл€ перелета(скорость и положение)
+	Ephemeris::Ephemerisx6(fp_Bin, jd0, start + 100, nctr, r0, &inside, &Kep[start - 100][0], JD0[start - 100], 0); //начальные услови€ дл€ перелета(скорость и положение)
 	
 	for (i = 0; i < 3; i++)
 	{
@@ -402,7 +406,6 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 				
 				dp[i][j] = min;
 				path[i][j] = nextCity;
-
 				jd[nextCity] = jd0 + dt;
 			}
 		}
@@ -430,9 +433,20 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 			nextCity = k;
 		}
 	}
+
+	for (j = 1; j < (1 << (n - 1)); j++)
+	{
+		for (i = 1; i < n; i++)
+		{
+			printf("%i", path[i][j]);
+		}
+		_log("");
+	}
 	
 	dp[0][j] = min;
 	path[0][j] = nextCity;
+
+	printf("dp = %lf \n", dp[0][j]);
 
 	return dp[0][j];
 }
@@ -440,18 +454,19 @@ double TSP(int& start, double& jd0, double dVlim, int n,															// INPUT
 int main()
 {
 	int type;
-	printf("Start! \n");
-	printf("1. Data from MPCORB. 2. Data from file. \n");
-	printf("Enter your type:\n");
+
+	_log("Start!");
+	_log("1. Data from MPCORB. 2. Data from file.");
+	_log("Enter your type:");
+
 	cin >> type;
-	printf("Type = %i \n", type);
+	printf("Type = %i\n", type);
 
 	const int de = 405;
 	fp_Bin = Ephemeris::INITIAL_DE(de);
 	
-	int n = NN, nn[] = { 0, 10000 };// искать в первых 10000 объектах
-	double aa[] = { 0.7, 3.5 }, e[] = { -0.1, 0.4 }, I[] = { -15 / raddeg, 15 / raddeg };
-	//filters посмотреть в статье ји 
+	int n = NN, nn[] = { 0, 10000 }; // искать в первых 10000 объектах
+	double aa[] = { 0.7, 3.5 }, e[] = { -0.1, 0.4 }, I[] = { -15 / raddeg, 15 / raddeg }; //filters посмотреть в статье ји 
 	
 	if (type == 1)
 	{										//name - nameObjects
@@ -462,15 +477,19 @@ int main()
 		n = 0;
 		string nameFile;
 		
-		printf("Enter your name file, without extension:");
-		cin >> nameFile;
+		//_log("Enter file name");
+		//cin >> nameFile;
 
 		nameFile = "amors.txt";
 		
+		_log("Read file");
+
 		ifstream filein(nameFile);
 		while (filein.getline(Name[n], 19)) n++;
 		filein.close();
 	
+		_log("Read data from MPCORB");
+
 		Ephemeris::Kep_elements_MPCORB_dataName(Name, Kep, JD0, n);
 	}
 	else 
