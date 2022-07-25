@@ -462,10 +462,10 @@ int main()
 		n = 0;
 		string nameFile;
 		
-		//printf("Enter your name file, without extension:");
-		//cin >> nameFile;
+		printf("Enter your name file, without extension:");
+		cin >> nameFile;
 
-		nameFile = "amors_data.txt";
+		nameFile = "amors.txt";
 		
 		ifstream filein(nameFile);
 		while (filein.getline(Name[n], 19)) n++;
@@ -479,18 +479,7 @@ int main()
 		return 1;
 	}
 
-	FILE* fileout;
-	char nameFile[20] = { "amors_kep_data.txt" };
 
-	fileout = fopen(nameFile, "w");
-	fprintf(fileout, "%25s %25s %25s %25s %25s %25s %25s %25s \n", "name", "jd", "a", "e", "i", "w", "OM", "M0");
-	
-	for (int i = 0; i < NN; i++)
-	{
-		fprintf(fileout, "%25s %25.16lf %25.16lf %25.16lf %25.16lf %25.16lf %25.16lf %25.16lf \n", Name[i], JD0[i], Kep[i][0], Kep[i][1], Kep[i][2], Kep[i][3], Kep[i][4], Kep[i][5]);
-	}
-	fclose(fileout);
-	/*
 	int ip, PATH[50];
 	double jd0 = Ephemeris::JD_epf(2023, 8, 29, 0);
 
@@ -509,7 +498,7 @@ int main()
 	
 	TSP(start, jd0, dVlim, n,							// INPUT
 		dVsum, PATH, dVpath, JDpath, ip, path);		// OUTPUT
-		*/
+		
 	//print_PATH(PATH, dVpath, JDpath, ip + 1, jd0);
 	
 	
